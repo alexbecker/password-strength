@@ -1,6 +1,6 @@
 import string
 from math import log
-from pyparsing import Word, ParseException, lineEnd
+from pyparsing import Word, ParseException, Optional, lineEnd
 
 nameFilePaths = {"male_first": "data/male_first_names.txt",
 				 "female_first": "data/female_first_names.txt",
@@ -46,14 +46,15 @@ leetToAscii = {"0": "o",
 			   "4": "a",
 			   "5": "s"}
 
-patterns = [[Word(leet).setResultsName("leet") + lineEnd],	# password
-			[Word(leet).setResultsName("leet") + Word(digits).setResultsName("numbers") + lineEnd],	# password97
-			[Word(leet).setResultsName("leet") + Word(symbols).setResultsName("symbols") + lineEnd,	# password!
-			 Word(leet).setResultsName("leet") + Word(digits).setResultsName("numbers") + Word(symbols).setResultsName("symbols") + lineEnd],	# password97!
-			[Word(leet).setResultsName("leet") + Word(symbols).setResultsName("symbols") + Word(digits).setResultsName("numbers") + lineEnd,	# password.1
-			 Word(leet).setResultsName("leet 1") + Word(symbols).setResultsName("symbols") + Word(leet).setResultsName("leet") + lineEnd,	# password.time
-			 Word(leet).setResultsName("leet 1") + Word(symbols).setResultsName("symbols") + Word(leet).setResultsName("leet") + Word(digits).setResultsName("numbers") + lineEnd,	# password.time1
-			 Word(leet).setResultsName("leet 1") + Word(symbols).setResultsName("symbols 1") + Word(leet).setResultsName("leet") + Word(symbols).setResultsName("symbols") + lineEnd]	# password.time!
+leetPattern = Word(leet).setResultsName("leet")
+numbersPattern = Word(digits).setResultsName("numbers")
+symbolsPattern = Word(symbols).setResultsName("symbols")
+remainderPattern = Optional(Word(leet)).setResultsName("remainder") + lineEnd
+patterns = [[leetPattern + remainderPattern],	# password
+			[leetPattern + numbersPattern + remainderPattern],	# password97
+			[leetPattern + symbolsPattern + remainderPattern,	# password!
+			 leetPattern + numbersPattern + symbolsPattern + remainderPattern],	# password97!
+			[leetPattern + symbolsPattern + numbersPattern + remainderPattern]	# password.1
 		   ]
 
 def capitalBonus(string):
@@ -178,7 +179,8 @@ def wordBonus(string):
 bonusFunctions = {"words": wordBonus,
 				  "numbers": numberBonus,
 				  "symbols": symbolBonus,
-				  "leet": leetBonus}
+				  "leet": leetBonus,
+				  "remainder": strength}
 
 def randomStrength(password):
 	"""
@@ -240,7 +242,7 @@ def strength(password, verbose=False):
 				matchEntropy = i + capitalBonus(password)
 
 				for elem in possibleMatch:
-					bonus = bonusFunctions[elem.split()[0]](possibleMatch[elem])
+					bonus = bonusFunctions[elem](possibleMatch[elem])
 
 					if bonus != None:
 						matchEntropy += bonus
