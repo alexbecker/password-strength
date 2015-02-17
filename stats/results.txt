@@ -1,0 +1,28 @@
+Password file: stats/10kmostcommon.txt
+        0 <= bits < 20:         7483 passwords
+        20 <= bits < 30:        1893 passwords
+        30 <= bits < 40:        555 passwords
+        40 <= bits < 50:        66 passwords
+        50 <= bits < 60:        2 passwords
+        60 <= bits < 999:       1 passwords
+Password file: stats/100kmostcommon.txt
+        0 <= bits < 20:         49715 passwords
+        20 <= bits < 30:        38520 passwords
+        30 <= bits < 40:        9086 passwords
+        40 <= bits < 50:        2128 passwords
+        50 <= bits < 60:        423 passwords
+        60 <= bits < 999:       129 passwords
+Password file: stats/10mduplicates.txt
+        0 <= bits < 20:         222736 passwords
+        20 <= bits < 30:        308714 passwords
+        30 <= bits < 40:        152505 passwords
+        40 <= bits < 50:        50963 passwords
+        50 <= bits < 60:        11637 passwords
+        60 <= bits < 999:       6676 passwords
+User / Password file: stats/10mwithfrequency.txt
+        0 <= bits < 20:         3178432 users
+        20 <= bits < 30:        3280626 users
+        30 <= bits < 40:        1976416 users
+        40 <= bits < 50:        1009985 users
+        50 <= bits < 60:        308812 users
+        60 <= bits < 999:       245702 users
