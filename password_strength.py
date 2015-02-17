@@ -1,5 +1,6 @@
 import string
 from math import log
+from collections import Counter
 from pyparsing import Word, ParseException, Optional, lineEnd
 
 wordsetFilePaths = {"male_first": "data/male_first_names.txt",
@@ -116,7 +117,7 @@ def deleet(string):
 
 	return result
 
-def _wordBonus(string):
+def wordBonus(string):
 	result = 10000
 
 	for kind in wordsets:
@@ -139,10 +140,10 @@ def wordlistBonus(string):
 	results = [None] * len(string)	# results[i] = wordsBonus(string[:i])
 
 	for i in range(len(string)):
-		results[i] = _wordBonus(string[:i + 1])
+		results[i] = wordBonus(string[:i + 1])
 
 		for j in range(i):
-			sliceBonus = _wordBonus(string[j + 1:i + 1])
+			sliceBonus = wordBonus(string[j + 1:i + 1])
 
 			if results[j] != None and sliceBonus != None:
 				if results[i] != None:
@@ -241,3 +242,22 @@ def strength(password, verbose=False):
 		print("random entropy: {}".format(randomEntropy))
 
 	return min(entropy, randomEntropy)
+
+# statistics on actual password lists
+statfiles = ["stats/10kmostcommon.txt", "stats/100kmostcommon.txt", "stats/10mduplicates.txt", "stats/10mall.txt"]
+
+def stats():
+	for statfile in statfiles:
+		fp = open(statfile, "r")
+
+		entropyCounts = Counter()
+		for line in fp:
+			entropyCounts[strength(line[:-1])] += 1
+
+		buckets = [0, 30, 40, 50, 60, 999]
+
+		print("file: {}".format(statfile))
+		for i in range(1, len(buckets)):
+			bucketCount = sum([entropyCounts[e] for e in entropyCounts if e >= buckets[i-1] and e < buckets[i]])
+
+			print("\t{} <= bits < {}: \t{}".format(buckets[i-1], buckets[i], bucketCount))
