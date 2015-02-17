@@ -38,7 +38,8 @@ hexdigits = string.hexdigits
 leetdigits = "01345"
 leetletters = "oieas"
 leet = lower + leetdigits
-symbols = ",.?!@#$%^&*-+~"
+symbols = ",.?!@#$%^&*-+~_"
+allchars = string.printable
 
 leetToAscii = {"0": "o",
 			   "1": "i",
@@ -49,20 +50,32 @@ leetToAscii = {"0": "o",
 leetPattern = Word(leet).setResultsName("leet")
 numbersPattern = Word(digits).setResultsName("numbers")
 symbolsPattern = Word(symbols).setResultsName("symbols")
-remainderPattern = Optional(Word(leet)).setResultsName("remainder") + lineEnd
-patterns = [[leetPattern + remainderPattern],	# password
-			[leetPattern + numbersPattern + remainderPattern],	# password97
-			[leetPattern + symbolsPattern + remainderPattern,	# password!
-			 leetPattern + numbersPattern + symbolsPattern + remainderPattern],	# password97!
-			[leetPattern + symbolsPattern + numbersPattern + remainderPattern]	# password.1
+remainderPattern = Optional(Word(allchars)).setResultsName("remainder") + lineEnd
+patterns = [[leetPattern + remainderPattern],
+			[numbersPattern + remainderPattern],
+			[leetPattern + numbersPattern + remainderPattern,
+			 leetPattern + symbolsPattern + remainderPattern],
+			[leetPattern + numbersPattern + symbolsPattern + remainderPattern,
+			 leetPattern + symbolsPattern + numbersPattern + remainderPattern,
+			 numbersPattern + symbolsPattern + remainderPattern,
+			 symbolsPattern + numbersPattern + remainderPattern]
 		   ]
 
 def capitalBonus(string):
-	if string.islower():
+	lowercase = 0
+	uppercase = 0
+	for char in string:
+		if char.islower():
+			lowercase += 1
+		elif char.isupper():
+			uppercase += 1
+
+	if uppercase == 0:
 		return 0
-	elif len(string) > 1 and string[1:].islower():
+	elif uppercase == 1 and string[0].isupper():
 		return 1
-	return len(string)
+
+	return lowercase + uppercase
 
 twoDigitYears = set(map(str, list(range(84, 100)))).union(set(["00","01","02","03","04","05","06","07","08","09","10","11","12","13","14","15"]))
 fourDigitYears = set(map(str, range(1951, 2016)))
@@ -176,11 +189,14 @@ def wordBonus(string):
 		return None
 	return lowestBonus
 
+def remainderBonus(string):
+	return 1 + strength(string)
+
 bonusFunctions = {"words": wordBonus,
 				  "numbers": numberBonus,
 				  "symbols": symbolBonus,
 				  "leet": leetBonus,
-				  "remainder": strength}
+				  "remainder": remainderBonus}
 
 def randomStrength(password):
 	"""
