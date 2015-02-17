@@ -2,33 +2,21 @@ import string
 from math import log
 from pyparsing import Word, ParseException, Optional, lineEnd
 
-nameFilePaths = {"male_first": "data/male_first_names.txt",
-				 "female_first": "data/female_first_names.txt",
-				 "last": "data/last_names.txt"}
-nameFiles = {}
-names = {}
-for kind in nameFilePaths:
-	nameFiles[kind] = open(nameFilePaths[kind], "r")
-	names[kind] = set()
-	for line in nameFiles[kind]:
-		names[kind].add(line[:-1])
-namesBonus = {}
-for kind in names:
-	namesBonus[kind] = int(log(len(names[kind]), 2))
-
-nounFilePath = "data/nouns.txt"
-nounFile = open(nounFilePath, "r")
-nouns = set()
-for line in nounFile:
-	nouns.add(line[:-1])
-nounsBonus = int(log(len(nouns)))
-
-wordFilePath = "data/words.txt"
-wordFile = open(wordFilePath, "r")
-words = set()
-for line in wordFile:
-	words.add(line[:-1])
-wordsBonus = int(log(len(words))) + 1	# for plurals
+wordsetFilePaths = {"male_first": "data/male_first_names.txt",
+					"female_first": "data/female_first_names.txt",
+					"last": "data/last_names.txt",
+					"nouns_short": "data/nouns_short.txt",
+					"nouns": "data/nouns.txt",
+					"words_short": "data/words_short.txt",
+					"words": "data/words.txt"}
+wordsets = {}
+wordsetBonuses = {}
+for kind in wordsetFilePaths:
+	wordsetFile = open(wordsetFilePaths[kind], "r")
+	wordsets[kind] = set()
+	for line in wordsetFile:
+		wordsets[kind].add(line[:-1])
+	wordsetBonuses[kind] = round(log(len(wordsets[kind]), 2))
 
 lower = string.ascii_lowercase
 upper = string.ascii_uppercase
@@ -46,7 +34,6 @@ leetToAscii = {"0": "o",
 			   "3": "e",
 			   "4": "a",
 			   "5": "s"}
-
 leetPattern = Word(leet).setResultsName("leet")
 numbersPattern = Word(digits).setResultsName("numbers")
 symbolsPattern = Word(symbols).setResultsName("symbols")
@@ -110,7 +97,7 @@ def leetBonus(string):
 		if char in leetletters:
 			leetable += 1
 
-	wordscore = wordBonus(deleet(string))
+	wordscore = wordlistBonus(deleet(string))
 
 	if leetchars == 0:
 		return wordscore
@@ -129,70 +116,46 @@ def deleet(string):
 
 	return result
 
-def allSplits(string, maxdepth):
-	"""
-	Recursively parse concatenated words into a list
-	Returns all possible parses
-	Except after multiple options have been detected at more than maxdepth levels,
-	it only uses the first option for the remaining string
-	This prevents denial of service attacks like [it] * 40,
-	which since "i" and "tit" are both words has 2^20 possible parses
-	"""
-	if string == "":
-		return [[]]
+def _wordBonus(string):
+	result = 10000
 
-	possibleNextWords = []
-	for i in range(1, len(string) + 1):
-		if string[:i] in words or (string[i-1] == "s" and string[:i-1] in words):
-			possibleNextWords.append((string[:i], string[i:]))
+	for kind in wordsets:
+		if string in wordsets[kind]:
+			result = min(result, wordsetBonuses[kind])
+		elif string != "" and string[-1] == "s" and string[:-1] in wordsets[kind]:
+			result = min(result, wordsetBonuses[kind] + 1)
 
-			if maxdepth == 0:
-				break
-
-	if len(possibleNextWords) > 1:
-		maxdepth -= 1
-
-	def parsePair(pair):
-		return list(map(lambda x: [pair[0]] + x, allSplits(pair[1], maxdepth)))
-			
-	result = []
-	for nextWord in possibleNextWords:
-		nextParses = allSplits(nextWord[1], maxdepth)
-	
-		for parse in nextParses:
-			result.append([nextWord[0]] + parse)
-
+	if result == 10000:
+		return None
 	return result
 
-def wordBonus(string):
-	lowestBonus = 10000
+def wordlistBonus(string):
+	"""
+	Return the lowest sum of all possible word bonusus in a list of words
+	"""
+	if string == "":
+		return 0
 
-	# first try names
-	for kind in names:
-		if string in names[kind]:
-			lowestBonus = min(lowestBonus, namesBonus[kind])
+	results = [None] * len(string)	# results[i] = wordsBonus(string[:i])
 
-	# then try concatenated words:
-	splits = allSplits(string, 7)
+	for i in range(len(string)):
+		results[i] = _wordBonus(string[:i + 1])
 
-	for split in splits:
-		bonus = 0
-		for word in split:
-			if word in nouns:
-				bonus += nounsBonus
-			else:
-				bonus += wordsBonus
+		for j in range(i):
+			sliceBonus = _wordBonus(string[j + 1:i + 1])
 
-		lowestBonus = min(lowestBonus, bonus)
+			if results[j] != None and sliceBonus != None:
+				if results[i] != None:
+					results[i] = min(results[i], results[j] + sliceBonus)
+				else:
+					results[i] = results[j] + sliceBonus
 
-	if lowestBonus == 10000:
-		return None
-	return lowestBonus
+	return results[len(string) - 1]
 
 def remainderBonus(string):
 	return 1 + strength(string)
 
-bonusFunctions = {"words": wordBonus,
+bonusFunctions = {"words": wordlistBonus,
 				  "numbers": numberBonus,
 				  "symbols": symbolBonus,
 				  "leet": leetBonus,
