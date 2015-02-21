@@ -244,20 +244,41 @@ def strength(password, verbose=False):
 	return min(entropy, randomEntropy)
 
 # statistics on actual password lists
-statfiles = ["stats/10kmostcommon.txt", "stats/100kmostcommon.txt", "stats/10mduplicates.txt", "stats/10mall.txt"]
+pwfiles = ["stats/10kmostcommon.txt", "stats/100kmostcommon.txt", "stats/10mduplicates.txt"]
+userfile = "stats/10mwithfrequency.txt"
 
-def stats():
-	for statfile in statfiles:
-		fp = open(statfile, "r")
+def stats(pws=True, users=True):
+	buckets = [0, 20, 30, 40, 50, 60, 999]
+
+	if pws:
+		for pwfile in pwfiles:
+			fp = open(pwfile, "r")
+
+			entropyCounts = Counter()
+			for line in fp:
+				entropyCounts[strength(line[:-1])] += 1
+
+			print("Password file: {}".format(pwfile))
+			for i in range(1, len(buckets)):
+				bucketCount = sum([entropyCounts[e] for e in entropyCounts if e >= buckets[i-1] and e < buckets[i]])
+
+				print("\t{} <= bits < {}: \t{} passwords".format(buckets[i-1], buckets[i], bucketCount))
+
+	if users:
+		print("User / Password file: {}".format(userfile))
+
+		fp = open(userfile)
 
 		entropyCounts = Counter()
 		for line in fp:
-			entropyCounts[strength(line[:-1])] += 1
+			numUsers = int(line.split()[0])
+			if len(line.split()) > 1:
+				password = line.split()[1].strip()
+			else:
+				password = ""
+			entropyCounts[strength(password)] += numUsers
 
-		buckets = [0, 30, 40, 50, 60, 999]
-
-		print("file: {}".format(statfile))
 		for i in range(1, len(buckets)):
 			bucketCount = sum([entropyCounts[e] for e in entropyCounts if e >= buckets[i-1] and e < buckets[i]])
 
-			print("\t{} <= bits < {}: \t{}".format(buckets[i-1], buckets[i], bucketCount))
+			print("\t{} <= bits < {}: \t{} users".format(buckets[i-1], buckets[i], bucketCount))
