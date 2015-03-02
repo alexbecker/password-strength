@@ -20,10 +20,11 @@ Statistics computed on the [password sets](https://xato.net/passwords/ten-millio
 released by Mark Burnett are located in the stats/results.txt file.
 Of particular note are the fractions of all users with given levels of password entropy:
 
-User / Password file: stats/10mwithfrequency.txt
- * &nbsp;0 <= bits < 20: &nbsp;3178432 users
- * 20 <= bits < 30: &nbsp;3280626 users
- * 30 <= bits < 40: &nbsp;1976416 users
- * 40 <= bits < 50: &nbsp;1009985 users
- * 50 <= bits < 60: &nbsp;308812 users
- * 60 <= bits < 999: 245702 users
+| bits |  users  |
+|------|--------:|
+| 0-20 | 3178432 |
+|20-30 | 3280626 |
+|30-40 | 1976416 |
+|40-50 | 1009985 |
+|50-60 | 308812  |
+|60-999| 245702  |
